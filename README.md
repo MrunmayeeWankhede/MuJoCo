@@ -19,10 +19,10 @@ Make the skeleton hit **the scuba** :D
 - [ ] Train it properly (RL/motion targets) for a real scuba
 
 ## What I've learned so far
-- MuJoCo is just the **body** (physics); my Python is the **brain** that sends commands each step
+- MuJoCo is just the **body** (physics). My Python is the **brain** that sends commands each step
 - A constant command moves a limb once then holds. *Ongoing* motion needs a command that changes over time
 - A "relaxed" limb still moves, because gravity and passive tendon tension are always acting
-- Muscle activation (0–1) is the command for a real muscle, not raw torque
+- Muscle activation (0-1) is the command for a real muscle, not raw torque
 - When my eyes can't see the motion, `qpos` shows it in numbers
 
 ## Files
