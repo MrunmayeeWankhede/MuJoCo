@@ -13,7 +13,7 @@ Make the skeleton hit **the scuba** :D
 - [x] Pendulum on a hinge: driving a joint with `data.ctrl`
 - [x] Sine-wave control: making MY command create the motion, not gravity
 - [x] Loaded a real MyoSuite elbow: drove an actual muscle to flex rhythmically using a pre-constructed model
-- [ ] Drive multiple muscles together (agonist/antagonist pairs)
+- [x] Drive multiple muscles together (agonist/antagonist pairs)
 - [ ] Load a bigger/full-body model
 - [ ] Hand-author a coordinated motion (scuba attempt #1)
 - [ ] Train it properly (RL/motion targets) for a real scuba
