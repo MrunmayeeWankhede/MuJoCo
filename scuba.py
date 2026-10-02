@@ -116,7 +116,7 @@ def main():
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--seconds", type=float, default=12)
     parser.add_argument("--policy", type=Path)
-    parser.add_argument("--output", type=Path, default=ROOT/"results"/"scuba_rollout.npz")
+    parser.add_argument("--output", type=Path, default=ROOT/"results"/"scuba"/"scuba_rollout.npz")
     args = parser.parse_args()
     if not np.isfinite(args.seconds) or args.seconds <= 0:
         parser.error("--seconds must be finite and positive")

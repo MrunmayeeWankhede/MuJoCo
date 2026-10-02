@@ -33,8 +33,8 @@ def main():
                     hand_camera.azimuth = 90
                     renderer.update_scene(sim.data, camera=hand_camera, scene_option=options)
                     left_closeup = Image.fromarray(renderer.render().copy())
-    output = ROOT/'results'
-    output.mkdir(exist_ok=True)
+    output = ROOT/'results'/'myo_scuba'
+    output.mkdir(parents=True, exist_ok=True)
     frames[0].save(output/'myo_scuba_preview.png')
     closeup.save(output/'myo_hand_preview.png')
     left_closeup.save(output/'myo_left_hand_preview.png')

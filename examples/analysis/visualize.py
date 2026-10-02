@@ -7,7 +7,7 @@ import numpy as np
 import myosuite  #muscoskeletal library (built on mujoco)
 import gymnasium as gym  #environment library myosuite uses
 
-import os
+from pathlib import Path
 
 env = gym.make("myoHandPoseRandom-v0")  #load the full hand/forearm model
 core = env.unwrapped  #this is the core environment, without the gym wrappers
@@ -31,7 +31,8 @@ for m in range(n_muscles):  #for each muscle
 env.close()  #close the window 
 
 #make the results folder
-os.makedirs("results", exist_ok=True)
+output = Path(__file__).resolve().parents[2] / "results" / "analysis"
+output.mkdir(parents=True, exist_ok=True)
 
 #draw the heatmap of the grid
 plt.figure(figsize=(10, 8))
@@ -43,5 +44,5 @@ plt.title("MyoHand: whcich muscles move which joints + which direction")
 plt.tight_layout()
 
 #save the heatmap to a file
-plt.savefig("results/muscle_joint_heatmap.png", dpi=150)
-print("Heatmap saved to results/muscle_joint_heatmap.png")
+plt.savefig(output / "muscle_joint_heatmap.png", dpi=150)
+print(f"Heatmap saved to {output / 'muscle_joint_heatmap.png'}")

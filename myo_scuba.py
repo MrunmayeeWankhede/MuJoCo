@@ -296,8 +296,8 @@ def main():
             if args.hide_muscles:
                 viewer.opt.tendongroup[:] = 0
             run(viewer)
-    output = ROOT/'results'
-    output.mkdir(exist_ok=True)
+    output = ROOT/'results'/'myo_scuba'
+    output.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(output/'myo_scuba_rollout.npz', qpos=positions,
         excitation=controls, hand_positions=hand_positions, dt=sim.dt,
         joint_names=np.array(list(sim.qadr)))

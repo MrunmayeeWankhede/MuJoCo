@@ -12,7 +12,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--steps', type=int, default=500_000)
     p.add_argument('--seed', type=int, default=7)
-    p.add_argument('--output', type=Path, default=ROOT/'results'/'scuba_ppo')
+    p.add_argument('--output', type=Path, default=ROOT/'results'/'scuba'/'scuba_ppo')
     args = p.parse_args()
     if args.steps <= 0:
         p.error('--steps must be positive')
