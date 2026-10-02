@@ -81,7 +81,11 @@ joint forces or external body forces driving the dance.
 The right hand stays near the face with its palm turned toward the nose.
 Arm inverse kinematics targets both hand position and palm orientation, using
 forearm pronation/supination and the wrist joints. The left hand sweeps horizontally in front
-of the chest with its palm facing toward the body, and the knees bend alternately.
+of the chest with its palm following the torso center, and the knees bend alternately.
+A forearm/wrist adjustment turns the sweeping palm inward as the hand moves
+out to the side; shoulder and elbow reference poses stay fixed during this
+adjustment. Orientation checks use the direction to the chest rather than a
+fixed world axis. The viewer and previews open from the front of the skeleton.
 The left model is mirrored, so its local palmar normal is +Z rather than the
 right hand's -Z; flexor/extensor attachment sites determine each side. Fingers follow neutral reference
 angles; this does not yet reproduce an exact nose pinch. This version uses a

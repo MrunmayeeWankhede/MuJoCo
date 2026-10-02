@@ -38,6 +38,10 @@ class MyoScubaTests(unittest.TestCase):
             sim.kin.qpos[:] = sim.target(t)
             mujoco.mj_forward(sim.model, sim.kin)
             self.assertGreater(sim.left_palm_alignment(sim.kin), 0.95)
+        # At the outer edge, +Y alone faces away from the torso center.
+        sim.kin.qpos[:] = sim.target(.625)
+        mujoco.mj_forward(sim.model, sim.kin)
+        self.assertLess(sim.palm_normal(sim.kin, 'l')[0], -0.5)
 
     def test_physics_drives_the_scuba_with_muscle_excitation(self):
         sim = self.sim

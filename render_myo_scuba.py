@@ -7,7 +7,7 @@ from PIL import Image
 def main():
     sim = MyoScuba()
     camera = mujoco.MjvCamera()
-    camera.azimuth, camera.elevation, camera.distance = -90, -5, 2.8
+    camera.azimuth, camera.elevation, camera.distance = 90, -5, 2.8
     camera.lookat[:] = [0, .1, 1]
     frames = []
     closeup = None
@@ -20,7 +20,7 @@ def main():
                 frames.append(Image.fromarray(renderer.render().copy()))
                 if closeup is None:
                     hand_camera = mujoco.MjvCamera()
-                    hand_camera.azimuth = -105
+                    hand_camera.azimuth = 105
                     hand_camera.elevation = -5
                     hand_camera.distance = .9
                     hand_camera.lookat[:] = [-.10, .05, 1.50]
@@ -30,7 +30,7 @@ def main():
                     closeup = Image.fromarray(renderer.render().copy())
                     hand_camera.lookat[:] = sim.hand_position(sim.data, 'l')
                     hand_camera.distance = .6
-                    hand_camera.azimuth = -90
+                    hand_camera.azimuth = 90
                     renderer.update_scene(sim.data, camera=hand_camera, scene_option=options)
                     left_closeup = Image.fromarray(renderer.render().copy())
     output = ROOT/'results'

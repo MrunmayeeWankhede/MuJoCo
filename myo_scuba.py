@@ -92,9 +92,14 @@ class MyoScuba:
     def right_palm_normal(self, data):
         return self.palm_normal(data, 'r')
 
+    def left_palm_target(self, data):
+        """Aim horizontally toward the torso center, including the lateral offset."""
+        inward = data.geom('thorax_coll1').xpos-self.hand_position(data, 'l')
+        inward[2] = 0
+        return inward/max(np.linalg.norm(inward), 1e-8)
+
     def left_palm_alignment(self, data):
-        # The chest is behind the sweeping hand at +Y in model coordinates.
-        return float(self.palm_normal(data, 'l') @ np.array([0, 1, 0]))
+        return float(self.palm_normal(data, 'l') @ self.left_palm_target(data))
 
     def right_palm_alignment(self, data):
         nose = data.body('head').xpos + np.array([0, -.09, -.035])
@@ -159,6 +164,32 @@ class MyoScuba:
             self.left_ids, guess = self.solve_arm('l', point, guess)
             poses.append(guess.copy())
         self.left_poses = np.array(poses)
+        self.retarget_left_palms()
+
+    def retarget_left_palms(self):
+        """Turn the palm inward using forearm/wrist joints; preserve upper-arm poses."""
+        wrist_ids = self.left_ids[4:]
+        bounds = self.model.jnt_range[wrist_ids]
+        for pose in self.left_poses:
+            q = self.base.copy()
+            q[self.left_ids] = pose
+            self.kin.qpos[:] = self.constrain(q)
+            mujoco.mj_forward(self.model, self.kin)
+            hand_point = self.hand_position(self.kin, 'l')
+            normal = self.left_palm_target(self.kin)
+            initial = pose[4:].copy()
+
+            def residual(wrist):
+                q[wrist_ids] = wrist
+                self.kin.qpos[:] = self.constrain(q)
+                mujoco.mj_forward(self.model, self.kin)
+                return np.r_[3.0*(self.palm_normal(self.kin, 'l')-normal),
+                             20*(self.hand_position(self.kin, 'l')-hand_point),
+                             .01*(wrist-initial)]
+
+            result = least_squares(residual, initial,
+                bounds=(bounds[:, 0]+1e-5, bounds[:, 1]-1e-5), max_nfev=100)
+            pose[4:] = result.x
 
     def target(self, t):
         phase = 2*np.pi*.4*t
@@ -258,7 +289,7 @@ def main():
     else:
         import mujoco.viewer
         with mujoco.viewer.launch_passive(sim.model, sim.data) as viewer:
-            viewer.cam.azimuth = -90
+            viewer.cam.azimuth = 90
             viewer.cam.elevation = -5
             viewer.cam.distance = 3
             viewer.cam.lookat[:] = [0, .1, 1]
