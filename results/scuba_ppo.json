@@ -1,0 +1,7 @@
+{
+  "seed": 7,
+  "training_steps": 100352,
+  "untrained_rmse_rad": 0.8154476354970582,
+  "trained_rmse_rad": 0.21916178996579566,
+  "scripted_rmse_rad": 0.1929128868255071
+}

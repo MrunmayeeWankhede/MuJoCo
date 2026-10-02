@@ -1,0 +1,6 @@
+-r requirements.txt
+# Match the verified anatomical model and MyoSuite/MuJoCo APIs.
+myo-sim==0.2.3
+myosuite==2.12.2
+mujoco==3.6.0
+scipy>=1.14,<2
