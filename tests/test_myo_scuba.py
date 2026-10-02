@@ -29,10 +29,20 @@ class MyoScubaTests(unittest.TestCase):
                     self.assertGreaterEqual(q[j], sim.model.jnt_range[j, 0]-1e-7)
                     self.assertLessEqual(q[j], sim.model.jnt_range[j, 1]+1e-7)
 
+    def test_mirrored_left_palm_faces_inward_in_reference_motion(self):
+        sim = self.sim
+        # Mirroring flips the flexor/extensor sides: a shared -Z normal would
+        # incorrectly identify the back of the left hand as its palm.
+        self.assertEqual(sim.palm_local_sign, {'r': -1.0, 'l': 1.0})
+        for t in np.linspace(0, 2.5, 100):
+            sim.kin.qpos[:] = sim.target(t)
+            mujoco.mj_forward(sim.model, sim.kin)
+            self.assertGreater(sim.left_palm_alignment(sim.kin), 0.95)
+
     def test_physics_drives_the_scuba_with_muscle_excitation(self):
         sim = self.sim
         sim.reset()
-        positions, knees, errors, contacts, palm_alignment = [], [], [], [], []
+        positions, knees, errors, contacts, palm_alignment, left_palm_alignment = [], [], [], [], [], []
         for step in range(1200):
             errors.append(sim.step())
             self.assertTrue(np.isfinite(sim.data.qpos).all())
@@ -44,6 +54,7 @@ class MyoScubaTests(unittest.TestCase):
                                        sim.hand_position(sim.data, 'l')])
                 knees.append(sim.data.qpos[sim.qadr['knee_angle_r']])
                 palm_alignment.append(sim.right_palm_alignment(sim.data))
+                left_palm_alignment.append(sim.left_palm_alignment(sim.data))
             for c in sim.data.contact:
                 names = sim.model.geom(c.geom1).name+sim.model.geom(c.geom2).name
                 if 'thorax_coll' in names:
@@ -54,6 +65,7 @@ class MyoScubaTests(unittest.TestCase):
         self.assertGreater(movement[3], 0.35)  # Side-to-side hand sweep.
         self.assertLess(movement[5], 0.06)
         self.assertLess(np.linalg.norm(movement[:3]), 0.10)  # Raised hand stays near face.
+        self.assertGreater(min(left_palm_alignment), 0.85)  # Sweeping palm stays inward.
         self.assertGreater(min(palm_alignment), 0.85)  # Palm faces the nose throughout.
         self.assertGreater(np.ptp(knees), 0.25)
         self.assertGreater(min(contacts, default=0), -0.005)

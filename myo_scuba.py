@@ -54,6 +54,14 @@ class MyoScuba:
         self.mass = np.zeros((self.model.nv, self.model.nv))
         self.moments = np.zeros((self.model.nu, self.model.nv))
         self.activation = np.zeros(self.model.nu)
+        # The mirrored left arm flips its local palmar side. Read that side
+        # from anatomical flexor/extensor attachments rather than assuming -Z.
+        self.palm_local_sign = {}
+        for side in ('r', 'l'):
+            flexor_z = np.mean([self.model.site(name+side).pos[2]
+                               for name in ('FDS3-P4_', 'FDP3-P4_')])
+            extensor_z = self.model.site('EDC3-P4_'+side).pos[2]
+            self.palm_local_sign[side] = float(np.sign(flexor_z-extensor_z))
         self.base = self.model.qpos0.copy()
         self.prepare_motion()
         self.reset()
@@ -76,10 +84,17 @@ class MyoScuba:
     def hand_position(self, data, side):
         return data.body('thirdmc_'+side).xpos.copy()
 
+    def palm_normal(self, data, side):
+        """World palmar normal, accounting for the mirrored left anatomy."""
+        return (self.palm_local_sign[side]
+                * data.body('thirdmc_'+side).xmat.reshape(3, 3)[:, 2])
+
     def right_palm_normal(self, data):
-        # The upstream flexor (FDS/FDP) sites sit on local -Z of thirdmc_r;
-        # extensor (EDC) sites sit on +Z. Thus -Z points out of the palm.
-        return -data.body('thirdmc_r').xmat.reshape(3, 3)[:, 2]
+        return self.palm_normal(data, 'r')
+
+    def left_palm_alignment(self, data):
+        # The chest is behind the sweeping hand at +Y in model coordinates.
+        return float(self.palm_normal(data, 'l') @ np.array([0, 1, 0]))
 
     def right_palm_alignment(self, data):
         nose = data.body('head').xpos + np.array([0, -.09, -.035])
@@ -90,8 +105,7 @@ class MyoScuba:
     def solve_arm(self, side, point, initial):
         """IK supplies targets only; the physical data never follows IK directly."""
         names = ['elv_angle_', 'shoulder_elv_', 'shoulder_rot_', 'elbow_flexion_', 'pro_sup_']
-        if side == 'r':
-            names += ['deviation_', 'flexion_']
+        names += ['deviation_', 'flexion_']
         ids = [self.qadr[n+side] for n in names]
         ranges = np.array([self.model.joint(n+side).range for n in names])
         arm_geoms = [self.model.geom(n+side).id for n in
@@ -118,6 +132,10 @@ class MyoScuba:
                 toward_nose = nose-self.hand_position(self.kin, 'r')
                 toward_nose /= max(np.linalg.norm(toward_nose), 1e-8)
                 palm_preference = self.right_palm_normal(self.kin)-toward_nose
+            else:
+                # The sweeping palm stays toward the chest instead of spinning
+                # with the shoulder. Wrist/forearm motion compensates the sweep.
+                palm_preference = self.palm_normal(self.kin, 'l')-np.array([0, 1, 0])
             return np.r_[8*(self.hand_position(self.kin, side)-point),
                          20*np.asarray(clearance), elbow_preference, palm_preference, .025*(x-initial)]
         answer = least_squares(residual, initial, bounds=(ranges[:,0]+1e-5, ranges[:,1]-1e-5),
@@ -136,7 +154,7 @@ class MyoScuba:
         self.left_points = np.array([[x, head[1]-.46, head[2]-.28]
                                     for x in np.linspace(-.10, .38, 33)])
         poses = []
-        guess = np.array([1.5,1.2,0,.4,0])
+        guess = np.array([1.5,1.2,0,.4,0,0,0])
         for point in self.left_points:
             self.left_ids, guess = self.solve_arm('l', point, guess)
             poses.append(guess.copy())
@@ -217,7 +235,7 @@ def main():
     if not np.isfinite(args.seconds) or args.seconds <= 0:
         parser.error('--seconds must be positive and finite')
     sim = MyoScuba()
-    errors, positions, controls, hand_positions, palm_alignment = [], [], [], [], []
+    errors, positions, controls, hand_positions, palm_alignment, left_palm_alignment = [], [], [], [], [], []
 
     def run(viewer=None):
         for _ in range(int(np.ceil(args.seconds/sim.dt))):
@@ -228,6 +246,7 @@ def main():
             hand_positions.append(np.r_[sim.hand_position(sim.data, 'r'),
                                         sim.hand_position(sim.data, 'l')])
             palm_alignment.append(sim.right_palm_alignment(sim.data))
+            left_palm_alignment.append(sim.left_palm_alignment(sim.data))
             if viewer is not None:
                 if not viewer.is_running():
                     break
@@ -264,6 +283,8 @@ def main():
         result['left_hand_vertical_range_m'] = float(movement[5])
         result['right_palm_min_alignment_cosine'] = float(
             min(palm_alignment[round(1/sim.dt):]))
+        result['left_palm_min_alignment_cosine'] = float(
+            min(left_palm_alignment[round(1/sim.dt):]))
     (output/'myo_scuba_metrics.json').write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps(result, indent=2))
 

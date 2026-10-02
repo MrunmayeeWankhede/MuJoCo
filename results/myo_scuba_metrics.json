@@ -2,9 +2,10 @@
   "model": "myofullbody",
   "pelvis_supported": true,
   "muscles": 416,
-  "steps": 171,
-  "tracking_rmse_rad": 0.08328366856715301,
-  "left_hand_lateral_range_m": 0.35668424240077345,
-  "left_hand_vertical_range_m": 0.01958007441975962,
-  "right_palm_min_alignment_cosine": 0.9882166351254766
+  "steps": 1200,
+  "tracking_rmse_rad": 0.07138830392697333,
+  "left_hand_lateral_range_m": 0.4640731875042512,
+  "left_hand_vertical_range_m": 0.019227209999168382,
+  "right_palm_min_alignment_cosine": 0.9851663567238064,
+  "left_palm_min_alignment_cosine": 0.9581126357275178
 }
