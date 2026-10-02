@@ -11,7 +11,7 @@ def main():
     camera.azimuth, camera.elevation, camera.distance = 20, -10, 3.4
     camera.lookat[:] = [0, 0, 1.15]
     frames = []
-    output = ROOT/'results'
+    output = ROOT/'results'/'scuba'
     output.mkdir(parents=True, exist_ok=True)
     with mujoco.Renderer(env.model, height=480, width=640) as renderer:
         for step in range(200):
